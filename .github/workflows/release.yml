@@ -1,6 +1,6 @@
 name: release
 
-# Publishes the version in packages/codemirror-lang-asp/package.json (see
+# Stages the version in packages/codemirror-lang-asp/package.json (see
 # .github/scripts/version.sh) to npm, and creates its GitHub release and tag
 # v<version>, when a pull request labelled `release` is merged into main. The release
 # notes are that version's CHANGELOG section as merged.
@@ -10,9 +10,11 @@ name: release
 #
 # npm authenticates this workflow through trusted publishing (OIDC): the package has a
 # trusted publisher on npmjs.com for jcschuster/lang-asp, workflow release.yml, with
-# `npm publish` allowed. An NPM_TOKEN secret, if set, is only a fallback. Run
+# `npm stage publish` allowed. An NPM_TOKEN secret, if set, is only a fallback. Run
 # workflow_dispatch to retry a release that failed part-way: a version already on npm
 # is skipped.
+# A version still staged blocks a retry, as npm stages a version only once: approve or
+# reject it on npmjs.com first.
 
 on:
   pull_request:
@@ -65,7 +67,7 @@ jobs:
       - name: Test what is about to be published
         run: nix develop --command .github/scripts/test-all.sh
 
-      - name: Publish to npm
+      - name: Stage on npm
         env:
           VERSION: ${{ steps.version.outputs.version }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -78,22 +80,14 @@ jobs:
             fi
             # Asked from outside the workspace, whose devEngines npm would refuse.
             if (cd "$RUNNER_TEMP" && npm view "$PACKAGE@$VERSION" version) >/dev/null 2>&1; then
-              echo "$PACKAGE@$VERSION is already on npm"
+              echo "- \`$PACKAGE@$VERSION\` is already live on npm" >> "$GITHUB_STEP_SUMMARY"
             else
-              (cd "packages/$PACKAGE" && npm publish --access public)
+              # Staged, not published: the version goes live once a maintainer approves it
+              # with 2FA.
+              (cd "packages/$PACKAGE" && npm stage publish --access public)
+              echo "::notice::$PACKAGE@$VERSION is staged. Approve it on https://www.npmjs.com/package/$PACKAGE (Staged Packages) to publish it."
+              echo "- \`$PACKAGE@$VERSION\` is **staged**: approve it on npmjs.com (Staged Packages) to publish it" >> "$GITHUB_STEP_SUMMARY"
             fi
-
-            # npm can accept a publish and still hold the version back, for review or as
-            # a staged version. Say so, rather than report a release nobody can install yet.
-            for _ in $(seq 12); do
-              if (cd "$RUNNER_TEMP" && npm view --prefer-online "$PACKAGE@$VERSION" version) >/dev/null 2>&1; then
-                echo "- \`$PACKAGE@$VERSION\` is live on npm" >> "$GITHUB_STEP_SUMMARY"
-                exit 0
-              fi
-              sleep 10
-            done
-            echo "::warning::$PACKAGE@$VERSION is not on npm two minutes after publishing. npm may be holding it for review or as a staged version: see https://www.npmjs.com/package/$PACKAGE and approve it under Staged Packages if asked."
-            echo "- \`$PACKAGE@$VERSION\` is **not live yet**: check npmjs.com, Staged Packages" >> "$GITHUB_STEP_SUMMARY"
           '
 
       - name: Create the GitHub release
