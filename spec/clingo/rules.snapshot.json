@@ -1,0 +1,493 @@
+{
+  "rules": [
+    "_arg_pool",
+    "_arg_pool_n",
+    "_body_literal_sep",
+    "_colon_body",
+    "_condition",
+    "_conditional_literal_0",
+    "_conditional_literal_n",
+    "_const_arg_pool",
+    "_const_term",
+    "_const_term_comma",
+    "_const_terms_trail",
+    "_const_tuple_item",
+    "_disjunction_element_sep",
+    "_fstring_escape",
+    "_fstring_fragment",
+    "_optimize_tuple",
+    "_string_escape",
+    "_string_fragment",
+    "_term_comma",
+    "_term_or_projection",
+    "_terms_or_projection",
+    "_terms_trail",
+    "_theory_arguments",
+    "_theory_definitions",
+    "_theory_operator",
+    "_theory_operator_arity_binary",
+    "_theory_operators_sep",
+    "_theory_terms_trail",
+    "_tuple_pool_n",
+    "abs",
+    "aggregate_function",
+    "anonymous",
+    "atom_identifier",
+    "binary_operation",
+    "body",
+    "body_aggregate",
+    "body_aggregate_element",
+    "body_aggregate_elements",
+    "body_literal",
+    "boolean",
+    "boolean_constant",
+    "code",
+    "comparison",
+    "condition",
+    "conditional_literal",
+    "const",
+    "const_abs",
+    "const_binary_operation",
+    "const_function",
+    "const_terms",
+    "const_tuple",
+    "const_type",
+    "const_unary_operation",
+    "default_negation",
+    "defined",
+    "disjunction",
+    "doc_arg",
+    "doc_args",
+    "doc_comment",
+    "doc_predicate",
+    "doc_var",
+    "double_default_negation",
+    "edge",
+    "edge_pair",
+    "external",
+    "external_function",
+    "fstring",
+    "fstring_accessor",
+    "fstring_align",
+    "fstring_alternate",
+    "fstring_conversion",
+    "fstring_field",
+    "fstring_grouping",
+    "fstring_sign",
+    "fstring_spec",
+    "fstring_type",
+    "fstring_width",
+    "function",
+    "head",
+    "head_aggregate",
+    "head_aggregate_element",
+    "head_aggregate_elements",
+    "heuristic",
+    "identifier",
+    "include",
+    "infimum",
+    "integrity_constraint",
+    "line_comment",
+    "literal",
+    "literal_sign",
+    "lower",
+    "maximize",
+    "minimize",
+    "number",
+    "optimize_element",
+    "optimize_elements",
+    "parameters",
+    "program",
+    "project_atom",
+    "project_signature",
+    "projection",
+    "relation",
+    "rule",
+    "script",
+    "set_aggregate",
+    "set_aggregate_element",
+    "set_aggregate_elements",
+    "show",
+    "show_signature",
+    "show_term",
+    "signature",
+    "simple_atom",
+    "sort_aggregate",
+    "source_file",
+    "statement",
+    "string",
+    "supremum",
+    "symbolic_atom",
+    "term",
+    "terms",
+    "theory",
+    "theory_atom",
+    "theory_atom_definition",
+    "theory_atom_type",
+    "theory_atom_upper",
+    "theory_element",
+    "theory_elements",
+    "theory_function",
+    "theory_list",
+    "theory_operator",
+    "theory_operator_arity",
+    "theory_operator_associativity",
+    "theory_operator_definition",
+    "theory_operator_definitions",
+    "theory_operators",
+    "theory_root_term",
+    "theory_set",
+    "theory_term",
+    "theory_term_definition",
+    "theory_terms",
+    "theory_tuple",
+    "theory_unparsed_term",
+    "tuple",
+    "tuple_pool_item",
+    "unary_operation",
+    "upper",
+    "variable",
+    "variables",
+    "weak_constraint",
+    "weight"
+  ],
+  "strings": [
+    "!=",
+    "\"",
+    "#const",
+    "#count",
+    "#defined",
+    "#edge",
+    "#end",
+    "#external",
+    "#false",
+    "#heuristic",
+    "#include",
+    "#inf",
+    "#infimum",
+    "#max",
+    "#maximise",
+    "#maximize",
+    "#min",
+    "#minimise",
+    "#minimize",
+    "#program",
+    "#project",
+    "#script",
+    "#show",
+    "#sort",
+    "#sum",
+    "#sum+",
+    "#sup",
+    "#supremum",
+    "#theory",
+    "#true",
+    "%",
+    "%*!",
+    "&",
+    "(",
+    ")",
+    "*",
+    "*%",
+    "**",
+    "+",
+    ",",
+    "-",
+    ".",
+    "..",
+    "/",
+    "0",
+    "0b",
+    "0o",
+    "0x",
+    ":",
+    ":-",
+    ":~",
+    ";",
+    "<",
+    "<=",
+    "<>",
+    "=",
+    ">",
+    ">=",
+    "?",
+    "@",
+    "[",
+    "\\",
+    "]",
+    "^",
+    "_",
+    "any",
+    "binary",
+    "body",
+    "default",
+    "directive",
+    "f\"",
+    "false",
+    "head",
+    "left",
+    "not",
+    "override",
+    "right",
+    "true",
+    "unary",
+    "{",
+    "|",
+    "}",
+    "~"
+  ],
+  "patterns": [
+    "!",
+    "#",
+    "#[^e][^#]",
+    "#e[^n][^#]",
+    "#en[^d][^#]",
+    "%[^*\\n\\r][^\\n\\r]*",
+    "(0|[1-9][0-9]*)",
+    "([0-1]+)",
+    "([0-9A-Fa-f]+)",
+    "([1-7]+)",
+    "([1-9][0-9]*)",
+    ":",
+    ":[/!<=>+*\\\\?&@|:;~\\^\\.]",
+    ":[/!<=>+\\-*\\\\?&@|:;~\\^\\.]{2,}",
+    "[,_]",
+    "[-+ ]",
+    "[.][a-z][A-Za-z0-9_]*",
+    "[/!<=>+\\-*\\\\?&@|;~\\^\\.][/!<=>+\\-*\\\\?&@|:;~\\^\\.]+",
+    "[/!<=>+\\-*\\\\?&@|~\\^]",
+    "[\\s\\r\\n]*",
+    "[^\"\\\\\\x00]+",
+    "[^#]",
+    "[^\\n\\x00]?[<>=^]",
+    "[^{}\"\\\\\\x00]+",
+    "[_']*[A-Z][A-Za-z0-9_']*",
+    "[_']*[a-z][A-Za-z0-9_']*",
+    "[bcdoxXns]",
+    "[rs]?",
+    "\\[",
+    "\\\\[n\"\\\\]",
+    "\\\\[n\"\\\\]|\\{\\{|\\}\\}",
+    "\\]"
+  ],
+  "externals": [
+    "empty_pool_item_first",
+    "empty_pool_item",
+    "colon",
+    "block_comment",
+    "doc_desc",
+    "_doc_token_args",
+    "_doc_token_paren",
+    "_doc_token_minus"
+  ],
+  "precedences": [
+    {
+      "rule": "_string_fragment",
+      "type": "PREC",
+      "value": 1,
+      "strings": []
+    },
+    {
+      "rule": "_fstring_fragment",
+      "type": "PREC",
+      "value": 1,
+      "strings": []
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 1,
+      "strings": [
+        "^"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 1,
+      "strings": [
+        "?"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 1,
+      "strings": [
+        "&"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 2,
+      "strings": [
+        "+"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 2,
+      "strings": [
+        "-"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 3,
+      "strings": [
+        "*"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 3,
+      "strings": [
+        "/"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_LEFT",
+      "value": 3,
+      "strings": [
+        "\\"
+      ]
+    },
+    {
+      "rule": "const_binary_operation",
+      "type": "PREC_RIGHT",
+      "value": 5,
+      "strings": [
+        "**"
+      ]
+    },
+    {
+      "rule": "const_unary_operation",
+      "type": "PREC_LEFT",
+      "value": 4,
+      "strings": [
+        "-"
+      ]
+    },
+    {
+      "rule": "const_unary_operation",
+      "type": "PREC_LEFT",
+      "value": 4,
+      "strings": [
+        "~"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 0,
+      "strings": [
+        ".."
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 1,
+      "strings": [
+        "^"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 1,
+      "strings": [
+        "?"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 1,
+      "strings": [
+        "&"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 2,
+      "strings": [
+        "+"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 2,
+      "strings": [
+        "-"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 3,
+      "strings": [
+        "*"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 3,
+      "strings": [
+        "/"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_LEFT",
+      "value": 3,
+      "strings": [
+        "\\"
+      ]
+    },
+    {
+      "rule": "binary_operation",
+      "type": "PREC_RIGHT",
+      "value": 5,
+      "strings": [
+        "**"
+      ]
+    },
+    {
+      "rule": "unary_operation",
+      "type": "PREC_LEFT",
+      "value": 4,
+      "strings": [
+        "-"
+      ]
+    },
+    {
+      "rule": "unary_operation",
+      "type": "PREC_LEFT",
+      "value": 4,
+      "strings": [
+        "~"
+      ]
+    },
+    {
+      "rule": "statement",
+      "type": "PREC_DYNAMIC",
+      "value": 1,
+      "strings": []
+    },
+    {
+      "rule": "statement",
+      "type": "PREC_DYNAMIC",
+      "value": 2,
+      "strings": []
+    }
+  ]
+}

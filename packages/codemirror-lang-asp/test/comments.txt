@@ -1,0 +1,65 @@
+# Line comments
+
+% one
+p. % two
+%
+q.
+
+==>
+
+SourceFile(LineComment,Rule(HeadAtom(Identifier),"."),LineComment,LineComment,Rule(HeadAtom(Identifier),"."))
+
+# Shebang line
+
+#!/usr/bin/env clingo
+p.
+
+==>
+
+SourceFile(LineComment,Rule(HeadAtom(Identifier),"."))
+
+# Block comment
+
+%* a
+ b *% p.
+
+==>
+
+SourceFile(BlockComment,Rule(HeadAtom(Identifier),"."))
+
+# Nested block comments
+
+%* a %* b *% c *% p.
+
+==>
+
+SourceFile(BlockComment,Rule(HeadAtom(Identifier),"."))
+
+# Line comment inside block comment
+
+%* a % *% still inside
+*% p.
+
+==>
+
+SourceFile(BlockComment,Rule(HeadAtom(Identifier),"."))
+
+# Doc comment as block comment
+
+%*! p(X)
+ A predicate.
+*%
+p(1).
+
+==>
+
+SourceFile(BlockComment,Rule(HeadAtom(Identifier,"(",Number,")"),"."))
+
+# Comments between tokens
+
+p %* x *% :- % y
+ q.
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier),BlockComment,":-",LineComment,Body(SymbolicAtom(Identifier)),"."))

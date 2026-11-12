@@ -1,0 +1,122 @@
+name: tree-sitter-clingo
+
+# Looks each week for a tree-sitter-clingo release newer than the tag
+# spec/clingo/SOURCE records, and opens a pull request that vendors it, regenerates
+# the snapshot and keywords, and reports the drift check. The Lezer grammar is written
+# by hand, so the pull request is a review, not a release: a renamed or new upstream
+# rule needs a decision in src/asp.grammar and gen/rule-map.json. It is opened as a
+# draft when a check fails.
+#
+# A pull request opened with GITHUB_TOKEN does not start other workflows, so ci would
+# not run on it. Set a BUMP_PR_TOKEN secret (a fine-grained token with contents and
+# pull-request write access) to have it run; without one, the pull request is still
+# opened and the checks below are its only test.
+
+on:
+  schedule:
+    - cron: "0 5 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: tree-sitter-clingo
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.BUMP_PR_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.BUMP_PR_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: cachix/install-nix-action@v31
+
+      # One pull request per tag: once its branch exists, later runs leave it to the review.
+      - name: Look for a newer release
+        id: tag
+        run: |
+          old=$(sed -n 's/^tag: //p' spec/clingo/SOURCE)
+          new=$(gh api repos/potassco/tree-sitter-clingo/releases/latest --jq .tag_name)
+          echo "old=$old" >> "$GITHUB_OUTPUT"
+          if [ "$new" != "$old" ] && ! git ls-remote --exit-code --heads origin "tree-sitter-clingo-$new"; then
+            echo "new=$new" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Vendor it and regenerate
+        if: steps.tag.outputs.new != ''
+        env:
+          NEW: ${{ steps.tag.outputs.new }}
+        run: |
+          nix develop --command bash -euo pipefail -c '
+            node gen/fetch.mjs "$NEW"
+            pnpm install --frozen-lockfile
+            pnpm generate
+          '
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git switch -c "tree-sitter-clingo-$NEW"
+          git add -A
+          git commit -m "tree-sitter-clingo $NEW"
+
+      - name: Run the checks
+        id: test
+        if: steps.tag.outputs.new != ''
+        run: |
+          set +e
+          nix develop --command .github/scripts/test-all.sh 2>&1 | tee "$RUNNER_TEMP/test.log"
+          echo "status=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          nix develop --command node gen/drift.mjs > "$RUNNER_TEMP/drift.txt"
+          git diff --stat HEAD~1 -- spec > "$RUNNER_TEMP/spec.txt"
+
+      - name: Open the pull request
+        if: steps.tag.outputs.new != ''
+        env:
+          NEW: ${{ steps.tag.outputs.new }}
+          OLD: ${{ steps.tag.outputs.old }}
+          TEST_STATUS: ${{ steps.test.outputs.status }}
+        run: |
+          branch="tree-sitter-clingo-$NEW"
+          git push origin "$branch"
+          if [ "$TEST_STATUS" = 0 ]; then
+            verdict="Every check passes."
+            draft=()
+          else
+            verdict="Something fails, so this is opened as a draft: fix it on this branch before merging."
+            draft=(--draft)
+          fi
+          {
+            echo "tree-sitter-clingo $NEW is out. This vendors it in \`spec/clingo/\` in place of $OLD and regenerates the snapshot and keywords; \`src/asp.grammar\` is unchanged."
+            echo
+            echo "$verdict"
+            echo
+            echo '```text'
+            grep -E '^(PASS|FAIL) ' "$RUNNER_TEMP/test.log" || tail -n 5 "$RUNNER_TEMP/test.log"
+            echo '```'
+            echo
+            echo "## To review"
+            echo
+            echo "Drift check (\`pnpm drift\`): every upstream keyword must occur in the grammar and every upstream rule must be mapped in \`gen/rule-map.json\`."
+            echo
+            echo '```text'
+            if [ -s "$RUNNER_TEMP/drift.txt" ]; then cat "$RUNNER_TEMP/drift.txt"; else echo "no drift"; fi
+            echo '```'
+            echo
+            echo "What changed upstream (\`git diff HEAD~1 -- spec\`, in particular \`rules.snapshot.json\`):"
+            echo
+            echo '```text'
+            cat "$RUNNER_TEMP/spec.txt"
+            echo '```'
+            echo
+            echo "Also update the versions the package README names."
+          } > "$RUNNER_TEMP/body.md"
+
+          gh label create dependencies --color 0366d6 \
+            --description "Moves a dependency" 2>/dev/null || true
+          gh pr create "${draft[@]}" --base main --head "$branch" --label dependencies \
+            --title "tree-sitter-clingo $NEW" --body-file "$RUNNER_TEMP/body.md"

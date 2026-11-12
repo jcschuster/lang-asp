@@ -1,0 +1,103 @@
+# Choice rule with bounds
+
+1 { a; b : c } 2 :- d.
+
+==>
+
+SourceFile(Rule(SetAggregate(Number,"{",SetAggregateElement(HeadAtom(Identifier)),";",SetAggregateElement(HeadAtom(Identifier),":",Condition(SymbolicAtom(Identifier))),"}",Number),":-",Body(SymbolicAtom(Identifier)),"."))
+
+# Choice rule with relation
+
+{ a(X) : b(X) } = 1.
+
+==>
+
+SourceFile(Rule(SetAggregate("{",SetAggregateElement(HeadAtom(Identifier,"(",Variable,")"),":",Condition(SymbolicAtom(Identifier,"(",Variable,")"))),"}",CompareOp("="),Number),"."))
+
+# Head aggregate
+
+#count { X : p(X) : q(X) } > 1.
+
+==>
+
+SourceFile(Rule(HeadAggregate(AggregateFunction("#count"),"{",HeadAggregateElement(Variable,":",HeadAtom(Identifier,"(",Variable,")"),":",Condition(SymbolicAtom(Identifier,"(",Variable,")"))),"}",CompareOp(">"),Number),"."))
+
+# Body aggregates
+
+:- #sum { W,X : w(X,W) } > 10, 2 #min { X : x(X) }.
+
+==>
+
+SourceFile(IntegrityConstraint(":-",Body(BodyAggregate(AggregateFunction("#sum"),"{",BodyAggregateElement(Variable,",",Variable,":",Condition(SymbolicAtom(Identifier,"(",Variable,",",Variable,")"))),"}",CompareOp(">"),Number),",",BodyAggregate(Number,AggregateFunction("#min"),"{",BodyAggregateElement(Variable,":",Condition(SymbolicAtom(Identifier,"(",Variable,")"))),"}")),"."))
+
+# Negated aggregates
+
+a :- not #count { 1 : b } = 1, not not { c }.
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier),":-",Body(not,BodyAggregate(AggregateFunction("#count"),"{",BodyAggregateElement(Number,":",Condition(SymbolicAtom(Identifier))),"}",CompareOp("="),Number),",",not,not,SetAggregate("{",SetAggregateElement(SymbolicAtom(Identifier)),"}")),"."))
+
+# Sum plus and max
+
+a :- #sum+ { X : p(X) } < 3, #max { Y : q(Y) } = 2.
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier),":-",Body(BodyAggregate(AggregateFunction("#sum+"),"{",BodyAggregateElement(Variable,":",Condition(SymbolicAtom(Identifier,"(",Variable,")"))),"}",CompareOp("<"),Number),",",BodyAggregate(AggregateFunction("#max"),"{",BodyAggregateElement(Variable,":",Condition(SymbolicAtom(Identifier,"(",Variable,")"))),"}",CompareOp("="),Number)),"."))
+
+# Sort aggregate (beyond clingo 5.8)
+
+:- X = #sort { #inf; X : p(X); #sup }.
+
+==>
+
+SourceFile(IntegrityConstraint(":-",Body(SortAggregate(Variable,"=","#sort","{",BodyAggregateElement(Infimum),";",BodyAggregateElement(Variable,":",Condition(SymbolicAtom(Identifier,"(",Variable,")"))),";",BodyAggregateElement(Supremum),"}")),"."))
+
+# Conditional literal in the head
+
+p(X) : q(X) :- r.
+
+==>
+
+SourceFile(Rule(Disjunction(ConditionalLiteral(HeadAtom(Identifier,"(",Variable,")"),":",Condition(SymbolicAtom(Identifier,"(",Variable,")")))),":-",Body(SymbolicAtom(Identifier)),"."))
+
+# Conditional literal in the body
+
+a :- b : c, d; e.
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier),":-",Body(ConditionalLiteral(SymbolicAtom(Identifier),":",Condition(SymbolicAtom(Identifier),",",SymbolicAtom(Identifier))),";",SymbolicAtom(Identifier)),"."))
+
+# Disjunction
+
+a | b ; c, d :- e.
+
+==>
+
+SourceFile(Rule(Disjunction(HeadAtom(Identifier),"|",HeadAtom(Identifier),";",HeadAtom(Identifier),",",HeadAtom(Identifier)),":-",Body(SymbolicAtom(Identifier)),"."))
+
+# Disjunction with conditions
+
+a : b | c : ; d.
+
+==>
+
+SourceFile(Rule(Disjunction(ConditionalLiteral(HeadAtom(Identifier),":",Condition(SymbolicAtom(Identifier))),"|",ConditionalLiteral(HeadAtom(Identifier),":"),";",HeadAtom(Identifier)),"."))
+
+# Comparisons
+
+a :- 1 < 2 <= 3, X != Y, X <> Y, X == Y, X = Y, X >= Y, X > Y.
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier),":-",Body(Comparison(Number,CompareOp("<"),Number,CompareOp("<="),Number),",",Comparison(Variable,CompareOp("!="),Variable),",",Comparison(Variable,CompareOp("<>"),Variable),",",Comparison(Variable,CompareOp("=="),Variable),",",Comparison(Variable,CompareOp("="),Variable),",",Comparison(Variable,CompareOp(">="),Variable),",",Comparison(Variable,CompareOp(">"),Variable)),"."))
+
+# Booleans
+
+#true :- #false.
+
+==>
+
+SourceFile(Rule(Boolean("#true"),":-",Body(Boolean("#false")),"."))
