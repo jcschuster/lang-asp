@@ -1,0 +1,773 @@
+@top SourceFile {
+  Statement*
+}
+
+DocComment {
+  "%*!" token_2 DocPredicate DocDesc? DocArgs? "*%"
+}
+
+Variables {
+  Variable { DocVar } token_3 ("," token_4 Variable { DocVar } token_5)*
+}
+
+DocPredicate {
+  Identifier token_6 (docTokenParen token_7 (Variables)? ")" token_8)?
+}
+
+DocVar {
+  token_9
+}
+
+DocArgs {
+  docTokenArgs token_10 DocArg*
+}
+
+DocArg {
+  docTokenMinus token_11 Variable { DocVar } token_12 ":" token_13 DocDesc?
+}
+
+String {
+  "\"" (StringFragment { stringFragment } | EscapeSequence { stringEscape })* "\""
+}
+
+Fstring {
+  "f\"" (StringFragment { fstringFragment } | EscapeSequence { fstringEscape } | FstringField)* "\""
+}
+
+stringFragment {
+  token_14
+}
+
+fstringFragment {
+  token_15
+}
+
+stringEscape {
+  token_16
+}
+
+fstringEscape {
+  token_17
+}
+
+FstringAccessor {
+  (Identifier { token_18 } | token_19 Number token_20)+
+}
+
+FstringConversion {
+  token_21 token_22
+}
+
+FstringAlign {
+  token_23
+}
+
+FstringSign {
+  token_24
+}
+
+FstringAlternate {
+  token_25
+}
+
+FstringWidth {
+  token_26
+}
+
+FstringGrouping {
+  token_27
+}
+
+FstringType {
+  token_28
+}
+
+FstringSpec {
+  token_29 FstringAlign? FstringSign? FstringAlternate? FstringWidth? FstringGrouping? FstringType?
+}
+
+FstringField {
+  "{" Term FstringAccessor? FstringConversion? FstringSpec? "}"
+}
+
+constTerm {
+  Infimum |
+  Supremum |
+  Number |
+  String |
+  BinaryOperation { ConstBinaryOperation } |
+  UnaryOperation { ConstUnaryOperation } |
+  Abs { ConstAbs } |
+  Function { ConstFunction } |
+  Tuple { ConstTuple }
+}
+
+ConstBinaryOperation {
+  /* precedence: left 1 */ (constTerm "^" constTerm) |
+  /* precedence: left 1 */ (constTerm "?" constTerm) |
+  /* precedence: left 1 */ (constTerm "&" constTerm) |
+  /* precedence: left 2 */ (constTerm "+" constTerm) |
+  /* precedence: left 2 */ (constTerm "-" constTerm) |
+  /* precedence: left 3 */ (constTerm "*" constTerm) |
+  /* precedence: left 3 */ (constTerm "/" constTerm) |
+  /* precedence: left 3 */ (constTerm "\\" constTerm) |
+  /* precedence: right 5 */ (constTerm "**" constTerm)
+}
+
+ConstUnaryOperation {
+  /* precedence: left 4 */ ("-" constTerm) |
+  /* precedence: left 4 */ ("~" constTerm)
+}
+
+ConstAbs {
+  "|" constTerm "|"
+}
+
+ConstTerms {
+  constTerm ("," constTerm)*
+}
+
+constArgPool {
+  "(" Terms { ConstTerms }? ")"
+}
+
+ConstFunction {
+  Identifier constArgPool?
+}
+
+constTermComma {
+  constTerm ","
+}
+
+constTermsTrail {
+  constTerm ("," constTerm)+ ","?
+}
+
+constTupleItem {
+  LoneComma { "," } |
+  constTerm |
+  Terms { constTermComma } |
+  Terms { constTermsTrail }
+}
+
+ConstTuple {
+  "(" constTupleItem? ")"
+}
+
+BinaryOperation {
+  /* precedence: left 0 */ (Term ".." Term) |
+  /* precedence: left 1 */ (Term "^" Term) |
+  /* precedence: left 1 */ (Term "?" Term) |
+  /* precedence: left 1 */ (Term "&" Term) |
+  /* precedence: left 2 */ (Term "+" Term) |
+  /* precedence: left 2 */ (Term "-" Term) |
+  /* precedence: left 3 */ (Term "*" Term) |
+  /* precedence: left 3 */ (Term "/" Term) |
+  /* precedence: left 3 */ (Term "\\" Term) |
+  /* precedence: right 5 */ (Term "**" Term)
+}
+
+UnaryOperation {
+  /* precedence: left 4 */ ("-" Term) |
+  /* precedence: left 4 */ ("~" Term)
+}
+
+Abs {
+  "|" Term (";" Term)* "|"
+}
+
+Terms {
+  Term ("," Term)*
+}
+
+termOrProjection {
+  Term |
+  Projection
+}
+
+termsOrProjection {
+  termOrProjection ("," termOrProjection)*
+}
+
+argPoolN {
+  (Terms { termsOrProjection } | EmptyPoolItem { EmptyPoolItemFirst }) (";" (Terms { termsOrProjection } | EmptyPoolItem))+
+}
+
+argPool {
+  "(" (Terms { termsOrProjection }? | argPoolN) ")"
+}
+
+Function {
+  Identifier argPool?
+}
+
+ExternalFunction {
+  "@" Identifier argPool?
+}
+
+termComma {
+  termOrProjection ","
+}
+
+termsTrail {
+  termOrProjection ("," termOrProjection)+ ","?
+}
+
+TuplePoolItem {
+  LoneComma { "," } |
+  Term |
+  Terms { termComma } |
+  Terms { termsTrail }
+}
+
+tuplePoolN {
+  (TuplePoolItem | EmptyPoolItem { EmptyPoolItemFirst }) (";" (TuplePoolItem | EmptyPoolItem))+
+}
+
+Tuple {
+  "(" (TuplePoolItem? | tuplePoolN) ")"
+}
+
+Term {
+  Infimum |
+  Supremum |
+  Number |
+  String |
+  Fstring |
+  Anonymous |
+  Variable |
+  BinaryOperation |
+  UnaryOperation |
+  Abs |
+  Function |
+  ExternalFunction |
+  Tuple
+}
+
+theoryOperator {
+  TheoryOperator |
+  TheoryOperator { DefaultNegation }
+}
+
+TheoryOperators {
+  theoryOperator+
+}
+
+TheoryTerms {
+  TheoryTerm ("," TheoryTerm)*
+}
+
+theoryArguments {
+  "(" TheoryTerms? ")"
+}
+
+TheoryFunction {
+  Identifier theoryArguments?
+}
+
+theoryTermsTrail {
+  TheoryTerm ("," TheoryTerm)* ","? |
+  LoneComma { "," }
+}
+
+TheoryTuple {
+  "(" TheoryTerms { theoryTermsTrail }? ")"
+}
+
+TheoryList {
+  "[" TheoryTerms? "]"
+}
+
+TheorySet {
+  "{" TheoryTerms? "}"
+}
+
+TheoryUnparsedTerm {
+  TheoryRootTerm? (TheoryOperators TheoryRootTerm)+
+}
+
+TheoryTerm {
+  TheoryUnparsedTerm |
+  TheoryRootTerm
+}
+
+TheoryRootTerm {
+  TheoryFunction |
+  TheoryTuple |
+  TheoryList |
+  TheorySet |
+  Number |
+  String |
+  Infimum |
+  Supremum |
+  Variable |
+  Anonymous
+}
+
+AtomIdentifier {
+  ClassicalNegation { "-" }? Identifier
+}
+
+SymbolicAtom {
+  AtomIdentifier argPool?
+}
+
+Comparison {
+  Term Relation Term (Relation Term)*
+}
+
+SimpleAtom {
+  SymbolicAtom |
+  Comparison |
+  BooleanConstant
+}
+
+LiteralSign {
+  DefaultNegation |
+  DoubleDefaultNegation
+}
+
+Literal {
+  LiteralSign? SimpleAtom
+}
+
+Condition {
+  Literal ("," Literal)*
+}
+
+condition {
+  Colon Condition?
+}
+
+Upper {
+  Relation? Term
+}
+
+Lower {
+  Term Relation?
+}
+
+SetAggregateElement {
+  Literal condition?
+}
+
+SetAggregateElements {
+  SetAggregateElement (";" SetAggregateElement)*
+}
+
+SetAggregate {
+  Lower? "{" SetAggregateElements? "}" Upper?
+}
+
+TheoryElement {
+  TheoryTerms condition? |
+  condition
+}
+
+TheoryElements {
+  TheoryElement (";" TheoryElement)*
+}
+
+TheoryAtomUpper {
+  theoryOperator TheoryTerm
+}
+
+TheoryAtom {
+  "&" Identifier argPool? ("{" TheoryElements? "}")? TheoryAtomUpper?
+}
+
+BodyAggregateElement {
+  condition |
+  Terms condition?
+}
+
+BodyAggregateElements {
+  BodyAggregateElement (";" BodyAggregateElement)*
+}
+
+BodyAggregate {
+  Lower? AggregateFunction "{" BodyAggregateElements? "}" Upper?
+}
+
+SortAggregate {
+  Term "=" "#sort" "{" BodyAggregateElements? "}"
+}
+
+BodyLiteral {
+  LiteralSign? (SetAggregate | BodyAggregate | SortAggregate | TheoryAtom | SimpleAtom)
+}
+
+bodyLiteralSep {
+  BodyLiteral (";" | ",") |
+  ConditionalLiteral ";"
+}
+
+Body {
+  bodyLiteralSep* (BodyLiteral | ConditionalLiteral)
+}
+
+colonBody {
+  (Colon Body?)? "."
+}
+
+HeadAggregateElement {
+  Terms? Colon Literal condition?
+}
+
+HeadAggregateElements {
+  HeadAggregateElement (";" HeadAggregateElement)*
+}
+
+HeadAggregate {
+  Lower? AggregateFunction "{" HeadAggregateElements? "}" Upper?
+}
+
+conditionalLiteralN {
+  Literal Colon Condition
+}
+
+conditionalLiteral0 {
+  Literal Colon
+}
+
+ConditionalLiteral {
+  conditionalLiteralN |
+  conditionalLiteral0
+}
+
+disjunctionElementSep {
+  Literal ("," | ";" | "|") |
+  ConditionalLiteral { conditionalLiteralN } (";" | "|") |
+  ConditionalLiteral { conditionalLiteral0 } ";"
+}
+
+Disjunction {
+  disjunctionElementSep+ (Literal | ConditionalLiteral) |
+  ConditionalLiteral
+}
+
+Head {
+  Literal |
+  Disjunction |
+  SetAggregate |
+  HeadAggregate |
+  TheoryAtom
+}
+
+Rule {
+  Head (":-" Body)? "."
+}
+
+IntegrityConstraint {
+  ":-" Body? "."
+}
+
+optimizeTuple {
+  "," Terms
+}
+
+Weight {
+  Term ("@" Term)?
+}
+
+OptimizeElement {
+  Weight optimizeTuple? condition?
+}
+
+OptimizeElements {
+  OptimizeElement (";" OptimizeElement)*
+}
+
+WeakConstraint {
+  ":~" Body? "." "[" Weight optimizeTuple? "]"
+}
+
+Maximize {
+  ("#maximize" | "#maximise") "{" OptimizeElements? "}" "."
+}
+
+Minimize {
+  ("#minimize" | "#minimise") "{" OptimizeElements? "}" "."
+}
+
+Signature {
+  AtomIdentifier "/" Number
+}
+
+ShowTerm {
+  "#show" Term colonBody
+}
+
+ShowSignature {
+  "#show" Signature "." ("[" Boolean "]")?
+}
+
+Defined {
+  "#defined" Signature "."
+}
+
+ProjectSignature {
+  "#project" Signature "."
+}
+
+ProjectAtom {
+  "#project" SymbolicAtom colonBody
+}
+
+Parameters {
+  Identifier ("," Identifier)*
+}
+
+Program {
+  "#program" Identifier ("(" Parameters? ")")? "."
+}
+
+Script {
+  "#script" "(" Identifier ")" Code "#end" "."
+}
+
+Const {
+  "#const" Identifier "=" constTerm "." ("[" ConstType "]")?
+}
+
+EdgePair {
+  Term "," Term
+}
+
+Edge {
+  "#edge" "(" EdgePair (";" EdgePair)* ")" colonBody
+}
+
+Heuristic {
+  "#heuristic" SymbolicAtom colonBody "[" Weight "," Term "]"
+}
+
+Include {
+  "#include" (String | "<" Identifier ">") "."
+}
+
+External {
+  "#external" SymbolicAtom colonBody ("[" Term "]")?
+}
+
+TheoryOperatorDefinition {
+  theoryOperator Colon Number "," TheoryOperatorArity |
+  theoryOperator Colon Number "," TheoryOperatorArity { theoryOperatorArityBinary } "," TheoryOperatorAssociativity
+}
+
+TheoryOperatorDefinitions {
+  TheoryOperatorDefinition (";" TheoryOperatorDefinition)*
+}
+
+TheoryTermDefinition {
+  Identifier "{" TheoryOperatorDefinitions? "}"
+}
+
+theoryOperatorsSep {
+  theoryOperator ("," theoryOperator)*
+}
+
+TheoryAtomDefinition {
+  "&" Identifier "/" Number Colon Identifier "," ("{" TheoryOperators { theoryOperatorsSep }? "}" "," Identifier ",")? TheoryAtomType
+}
+
+theoryDefinitions {
+  TheoryAtomDefinition (";" TheoryAtomDefinition)* |
+  TheoryTermDefinition (";" TheoryTermDefinition)* (";" TheoryAtomDefinition)*
+}
+
+Theory {
+  "#theory" Identifier "{" theoryDefinitions? "}" "."
+}
+
+Statement {
+  DocComment |
+  Rule |
+  IntegrityConstraint |
+  WeakConstraint |
+  Minimize |
+  Maximize |
+  Show |
+  /* precedence: dynamic 1 */ (ShowTerm) |
+  /* precedence: dynamic 2 */ (ShowSignature) |
+  Defined |
+  Edge |
+  Heuristic |
+  ProjectSignature |
+  ProjectAtom |
+  Const |
+  Script |
+  Include |
+  Program |
+  External |
+  Theory
+}
+
+@skip { LineComment | BlockComment | token_1 }
+
+@external tokens token from "./tokens" { EmptyPoolItemFirst, EmptyPoolItem, Colon, BlockComment, DocDesc, docTokenArgs, docTokenParen, docTokenMinus }
+
+@tokens {
+  token_1 {
+    $[ \t\r\n]
+  }
+  LineComment {
+    "%" ![*\n\r] ![\n\r]* | "%"
+  }
+  token_2 {
+    $[ \t\n\r\r\n]*
+  }
+  token_3 {
+    $[ \t\n\r\r\n]*
+  }
+  token_4 {
+    $[ \t\n\r\r\n]*
+  }
+  token_5 {
+    $[ \t\n\r\r\n]*
+  }
+  Identifier {
+    $[_']* $[a-z] $[A-Za-z0-9_']*
+  }
+  token_6 {
+    $[ \t\n\r\r\n]*
+  }
+  token_7 {
+    $[ \t\n\r\r\n]*
+  }
+  token_8 {
+    $[ \t\n\r\r\n]*
+  }
+  token_9 {
+    $[_']* $[A-Z] $[A-Za-z0-9_']*
+  }
+  token_10 {
+    $[ \t\n\r\r\n]*
+  }
+  token_11 {
+    $[ \t\n\r\r\n]*
+  }
+  token_12 {
+    $[ \t\n\r\r\n]*
+  }
+  token_13 {
+    $[ \t\n\r\r\n]*
+  }
+  token_14 /* precedence: 1 */ {
+    !["\\\x00]+
+  }
+  token_15 /* precedence: 1 */ {
+    ![{}"\\\x00]+
+  }
+  token_16 {
+    "\\\\" $[n"\\]
+  }
+  token_17 {
+    "\\\\" $[n"\\] | "\\{\\{" | "\\}\\}"
+  }
+  token_18 {
+    $[.] $[a-z] $[A-Za-z0-9_]*
+  }
+  token_19 {
+    "\\["
+  }
+  Number {
+    "0" | ($[1-9] $[0-9]*) | token_30 | token_31 | token_32
+  }
+  token_20 {
+    "\\]"
+  }
+  token_21 {
+    "!"
+  }
+  token_22 {
+    $[rs]?
+  }
+  token_23 {
+    ![\n\x00]? $[<>=^]
+  }
+  token_24 {
+    $[-+ ]
+  }
+  token_25 {
+    "#"
+  }
+  token_26 {
+    ("0" | $[1-9] $[0-9]*)
+  }
+  token_27 {
+    $[,_]
+  }
+  token_28 {
+    $[bcdoxXns]
+  }
+  token_29 {
+    ":"
+  }
+  Supremum {
+    "#sup" | "#supremum"
+  }
+  Infimum {
+    "#inf" | "#infimum"
+  }
+  token_30 {
+    "0x" ($[0-9A-Fa-f]+)
+  }
+  token_31 {
+    "0o" ($[1-7]+)
+  }
+  token_32 {
+    "0b" ($[0-1]+)
+  }
+  Anonymous {
+    "_"
+  }
+  Variable {
+    $[_']* $[A-Z] $[A-Za-z0-9_']*
+  }
+  Projection {
+    "*"
+  }
+  TheoryOperator {
+    $[/!<=>+\-*\\?&@|~\^] | $[/!<=>+\-*\\?&@|;~\^\.] $[/!<=>+\-*\\?&@|:;~\^\.]+ | ":" $[/!<=>+*\\?&@|:;~\^\.] | ":" $[/!<=>+\-*\\?&@|:;~\^\.] $[/!<=>+\-*\\?&@|:;~\^\.] $[/!<=>+\-*\\?&@|:;~\^\.]*
+  }
+  BooleanConstant {
+    "#true" | "#false"
+  }
+  Relation {
+    ">" | "<" | ">=" | "<=" | "=" | "!=" | "<>"
+  }
+  DefaultNegation {
+    "not"
+  }
+  DoubleDefaultNegation {
+    "not" "not"
+  }
+  AggregateFunction {
+    "#sum" | "#sum+" | "#min" | "#max" | "#count"
+  }
+  Show {
+    "#show" "."
+  }
+  Boolean {
+    "true" | "false"
+  }
+  Code {
+    (![#] | "#" ![e] ![#] | "#e" ![n] ![#] | "#en" ![d] ![#])*
+  }
+  ConstType {
+    "default" | "override"
+  }
+  TheoryOperatorArity {
+    "unary"
+  }
+  theoryOperatorArityBinary {
+    "binary"
+  }
+  TheoryOperatorAssociativity {
+    "left" | "right"
+  }
+  TheoryAtomType {
+    "head" | "body" | "any" | "directive"
+  }
+}

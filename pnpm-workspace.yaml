@@ -2,4 +2,4 @@ packages:
   - packages/*
 
 allowBuilds:
-  tree-sitter: true
+  lezer-import-tree-sitter@https://codeload.github.com/lezer-parser/import-tree-sitter/tar.gz/bb2e87bb7308eef8d28dd435cd84b9f057bbbfe4: true

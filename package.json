@@ -1,0 +1,27 @@
+{
+  "name": "lang-asp",
+  "private": true,
+  "description": "CodeMirror 6 language support for clingo's ASP language",
+  "scripts": {
+    "generate": "node gen/import.mjs && node gen/snapshot.mjs && node gen/keywords.mjs",
+    "drift": "node gen/drift.mjs",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r test"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": "26"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.14.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.14.0",
+  "devDependencies": {
+    "lezer-import-tree-sitter": "github:lezer-parser/import-tree-sitter#bb2e87bb7308eef8d28dd435cd84b9f057bbbfe4"
+  },
+  "type": "module"
+}

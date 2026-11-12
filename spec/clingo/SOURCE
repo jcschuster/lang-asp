@@ -1,0 +1,13 @@
+url: https://github.com/potassco/tree-sitter-clingo
+tag: v1.0.6
+commit: adf75e52b76555674f2b0de6cad8eb0e0b45fecb
+date: 2026-11-12
+sha256:
+  b17ad51f1d4b7937c6fc4f4260b4f6ff3d49f95d9e4757cdcedcf5be4623f5d3  LICENSE
+  6cb89300183bd35648e5754bdcf8b3357aa93318b842d242cf5e3ed254e26380  src/grammar.json
+  c296f9b610baa9790fffe29978c5bcd40f99bc49a67c4fd6b4a2aeb3511877e4  src/scanner.c
+  34f5bd375b8ac4f7bf40a17507b17eaebd0a6e3f92f62ac1e237cb55aed1cec2  test/corpus/body.txt
+  c4b77593ce87cfd2623880a24ebd45eb94b67b26cff40593b9d86ee4efc8c0ad  test/corpus/head.txt
+  4aaab16cabf2dbb4f065e89019f2e38a50bdb9bb51f29f650b676a5db3fc2b21  test/corpus/statements.txt
+  83f6f7f0d91a7a9ee83008c9aeae55ac6ee0101a687ae1e2807a6401c138439e  test/corpus/terms.txt
+  7b0ea7a24ad5100f4ad0b7d65ed5493d3b005d3906151d3f75850dbf0886747a  test/corpus/theory.txt

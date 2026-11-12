@@ -1,0 +1,151 @@
+# Numbers
+
+p(0, 42, 0x1F, 0o17, 0b101).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Number,",",Number,",",Number,",",Number,",",Number,")"),"."))
+
+# Strings
+
+p("a\"b\\c\n").
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",String("\"",Escape,Escape,Escape,"\""),")"),"."))
+
+# F-string (beyond clingo 5.8)
+
+p(f"a{{b}}{X.name[0]!r:>8}").
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",FString("f\"",Escape,Escape,FStringField("{",Variable,FStringFormat,"}"),"\""),")"),"."))
+
+# Special constants
+
+p(#inf, #infimum, #sup, #supremum).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Infimum,",",Infimum,",",Supremum,",",Supremum,")"),"."))
+
+# Variables and anonymous variables
+
+p(X, _, _y, X', 'Y).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Variable,",",Anonymous,",",Function(Identifier),",",Variable,",",Variable,")"),"."))
+
+# Interval binds loosest
+
+p(1..2+3).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(Number,"..",BinaryOperation(Number,"+",Number)),")"),"."))
+
+# Xor below question below and
+
+p(1^2?3&4).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(Number,"^",BinaryOperation(Number,"?",BinaryOperation(Number,"&",Number))),")"),"."))
+
+# And question xor chain
+
+p(1&2?3^4).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(BinaryOperation(BinaryOperation(Number,"&",Number),"?",Number),"^",Number),")"),"."))
+
+# Plus below times
+
+p(1+2*3).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(Number,"+",BinaryOperation(Number,"*",Number)),")"),"."))
+
+# Minus chains to the left
+
+p(1-2-3).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(BinaryOperation(Number,"-",Number),"-",Number),")"),"."))
+
+# Power chains to the right
+
+p(2**3**4).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(Number,"**",BinaryOperation(Number,"**",Number)),")"),"."))
+
+# Unary minus binds tighter than power
+
+p(-2**2, ~1).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(UnaryOperation("-",Number),"**",Number),",",UnaryOperation("~",Number),")"),"."))
+
+# Times, divide and modulo
+
+p(1*2/3\4).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",BinaryOperation(BinaryOperation(BinaryOperation(Number,"*",Number),"/",Number),"\\",Number),")"),"."))
+
+# Absolute value
+
+p(|X|, |X;Y|).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Abs("|",Variable,"|"),",",Abs("|",Variable,";",Variable,"|"),")"),"."))
+
+# Pools
+
+p(1;2). p(;). p(1;;2).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Number,";",Number,")"),"."),Rule(HeadAtom(Identifier,"(",";",")"),"."),Rule(HeadAtom(Identifier,"(",Number,";",";",Number,")"),"."))
+
+# Tuples
+
+p((), (1), (1,), (1,2), (,), (1;2), (;)).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Tuple("(",")"),",",Tuple("(",Number,")"),",",Tuple("(",Number,",",")"),",",Tuple("(",Number,",",Number,")"),",",Tuple("(",",",")"),",",Tuple("(",Number,";",Number,")"),",",Tuple("(",";",")"),")"),"."))
+
+# External functions
+
+p(@f(1), @g).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",ExternalFunction("@",Identifier,"(",Number,")"),",",ExternalFunction("@",Identifier),")"),"."))
+
+# Projection (beyond clingo 5.8)
+
+p(*, f(*)).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Projection,",",Function(Identifier,"(",Projection,")"),")"),"."))
+
+# Classical negation
+
+-p(1). q :- -r.
+
+==>
+
+SourceFile(Rule(HeadAtom("-",Identifier,"(",Number,")"),"."),Rule(HeadAtom(Identifier),":-",Body(SymbolicAtom("-",Identifier)),"."))

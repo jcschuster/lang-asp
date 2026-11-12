@@ -1,0 +1,370 @@
+@external propSource aspHighlighting from "./highlight"
+
+// clingo's input language. Derived by hand from gen/out/asp.imported.grammar (the
+// tree-sitter-clingo grammar, converted) and checked against clingo's own parser,
+// libgringo/src/input/nongroundgrammar.yy. Where the two differ, clingo decides; the
+// syntax tree-sitter-clingo adds beyond clingo 5.8 (f-strings, `#sort`, projection
+// `*`, `#show p/1. [true]`, `_` and `(,)` in theory terms, theory guards without
+// braces) is accepted too.
+
+@precedence {
+  unary,
+  pow @right,
+  times @left,
+  plus @left,
+  and @left,
+  question @left,
+  xor @left,
+  interval @left
+}
+
+@top SourceFile { statement* }
+
+statement[@isGroup=Statement] {
+  Rule |
+  IntegrityConstraint |
+  WeakConstraint |
+  Minimize |
+  Maximize |
+  Show |
+  ShowTerm |
+  ShowSignature |
+  Defined |
+  Edge |
+  Heuristic |
+  ProjectSignature |
+  ProjectAtom |
+  Const |
+  Script |
+  Include |
+  Program |
+  External |
+  Theory
+}
+
+// Statements
+
+Rule { head (":-" Body?)? "." }
+
+IntegrityConstraint { ":-" Body? "." }
+
+WeakConstraint { ":~" Body? "." "[" weight ("," terms)? "]" }
+
+Minimize { ("#minimize" | "#minimise") optimizeElements "." }
+
+Maximize { ("#maximize" | "#maximise") optimizeElements "." }
+
+optimizeElements { "{" (OptimizeElement (";" OptimizeElement)*)? "}" }
+
+OptimizeElement { weight ("," terms)? (":" Condition?)? }
+
+weight { term ("@" term)? }
+
+// clingo decides between a signature and a term by looking ahead for
+// `name/arity.`; here both are parsed and the signature wins, as in tree-sitter-clingo.
+Show { "#show" "." }
+
+ShowTerm[@dynamicPrecedence=1] { "#show" term colonBody }
+
+ShowSignature[@dynamicPrecedence=2] {
+  "#show" Signature "." ("[" (ext<"true"> | ext<"false">) "]")?
+}
+
+Signature { "-"? Identifier ~signature "/" Number }
+
+Defined { "#defined" Signature "." }
+
+ProjectSignature { "#project" Signature "." }
+
+ProjectAtom { "#project" SymbolicAtom colonBody }
+
+Edge { "#edge" "(" term "," term (";" term "," term)* ")" colonBody }
+
+Heuristic { "#heuristic" SymbolicAtom colonBody "[" weight "," term "]" }
+
+External { "#external" SymbolicAtom colonBody ("[" term "]")? }
+
+Const {
+  "#const" Identifier "=" term "." ("[" (ext<"default"> | ext<"override">) "]")?
+}
+
+Include { "#include" (String | "<" Identifier ">") "." }
+
+Program { "#program" Identifier ("(" (Identifier ("," Identifier)*)? ")")? "." }
+
+Script { "#script" "(" Identifier ")" Code? "#end" "." }
+
+colonBody { (":" Body?)? "." }
+
+// Heads and bodies
+
+head {
+  literal<HeadAtom> |
+  Disjunction |
+  SetAggregate<HeadAtom> |
+  HeadAggregate |
+  TheoryAtom
+}
+
+Disjunction {
+  (literal<HeadAtom> ("," | ";" | "|") | headConditional (";" | "|") | headConditionalEmpty ";")+
+    (literal<HeadAtom> | ConditionalLiteral<HeadAtom>) |
+  ConditionalLiteral<HeadAtom>
+}
+
+headConditional[@name=ConditionalLiteral] { literal<HeadAtom> ":" Condition }
+
+headConditionalEmpty[@name=ConditionalLiteral] { literal<HeadAtom> ":" }
+
+Body {
+  (bodyLiteral ("," | ";") | ConditionalLiteral<SymbolicAtom> ";")*
+    (bodyLiteral | ConditionalLiteral<SymbolicAtom>)
+}
+
+bodyLiteral {
+  literal<SymbolicAtom> |
+  sign? (
+    SetAggregate<SymbolicAtom> |
+    BodyAggregate |
+    SortAggregate |
+    TheoryAtom
+  )
+}
+
+ConditionalLiteral<atom> { literal<atom> ":" Condition? }
+
+Condition { literal<SymbolicAtom> ("," literal<SymbolicAtom>)* }
+
+literal<atom> { sign? (atom | Comparison | Boolean) }
+
+sign { kw<"not"> kw<"not">? }
+
+SymbolicAtom { "-"? Identifier argPool? }
+
+HeadAtom { "-"? Identifier argPool? }
+
+Comparison { term (CompareOp term)+ }
+
+CompareOp { "=" | "==" | "!=" | "<>" | "<" | "<=" | ">" | ">=" }
+
+Boolean { "#true" | "#false" }
+
+// Aggregates
+
+lower { term CompareOp? }
+
+upper { CompareOp? term }
+
+SetAggregate<atom> {
+  lower? "{" (SetAggregateElement<atom> (";" SetAggregateElement<atom>)*)? "}" upper?
+}
+
+SetAggregateElement<atom> { literal<atom> (":" Condition?)? }
+
+BodyAggregate {
+  lower? AggregateFunction "{" (BodyAggregateElement (";" BodyAggregateElement)*)? "}" upper?
+}
+
+BodyAggregateElement { terms (":" Condition?)? | ":" Condition? }
+
+HeadAggregate {
+  lower? AggregateFunction "{" (HeadAggregateElement (";" HeadAggregateElement)*)? "}" upper?
+}
+
+HeadAggregateElement { terms? ":" literal<HeadAtom> (":" Condition?)? }
+
+SortAggregate {
+  term "=" "#sort" "{" (BodyAggregateElement (";" BodyAggregateElement)*)? "}"
+}
+
+AggregateFunction {
+  "#count" | "#sum" | "#sum+" | "#min" | "#max"
+}
+
+// Terms
+
+term[@isGroup=Term] {
+  Number |
+  String |
+  FString |
+  Variable |
+  Anonymous |
+  Infimum |
+  Supremum |
+  Function |
+  ExternalFunction |
+  Tuple |
+  Abs |
+  BinaryOperation |
+  UnaryOperation
+}
+
+terms { term ("," term)* }
+
+BinaryOperation {
+  term !interval ".." term |
+  term !xor "^" term |
+  term !question "?" term |
+  term !and "&" term |
+  term !plus ("+" | "-") term |
+  term !times ("*" | "/" | "\\") term |
+  term !pow "**" term
+}
+
+UnaryOperation { !unary ("-" | "~") term }
+
+Abs { "|" term (";" term)* "|" }
+
+Function { Identifier ~signature argPool? }
+
+ExternalFunction { "@" Identifier argPool? }
+
+argPool { "(" arguments (";" arguments)* ")" }
+
+arguments { (termOrProjection ("," termOrProjection)*)? }
+
+termOrProjection { term | Projection }
+
+Tuple { "(" tupleItem (";" tupleItem)* ")" }
+
+tupleItem { (termOrProjection ("," termOrProjection)* ","?)? | "," }
+
+FStringField { fieldStart term FStringFormat? "}" }
+
+// Theory atoms
+
+TheoryAtom {
+  "&" Identifier argPool?
+  ("{" (TheoryElement (";" TheoryElement)*)? "}")?
+  (theoryOperator theoryOperatorTerm)?
+}
+
+TheoryElement { theoryTerms (":" Condition?)? | ":" Condition? }
+
+theoryTerms { theoryOperatorTerm ("," theoryOperatorTerm)* }
+
+theoryOperatorTerm { theoryOperator* theoryTerm (theoryOperator+ theoryTerm)* }
+
+theoryOperator { TheoryOperator | kw<"not"> }
+
+theoryTerm {
+  theoryCompound |
+  Number |
+  String |
+  Infimum |
+  Supremum |
+  Variable |
+  Anonymous
+}
+
+theoryCompound[@isGroup=TheoryTerm] { TheoryFunction | TheoryTuple | TheoryList | TheorySet }
+
+TheoryFunction { Identifier ("(" theoryTerms? ")")? }
+
+TheoryTuple { "(" (theoryOperatorTerm ("," theoryOperatorTerm)* ","?)? ")" | "(" "," ")" }
+
+TheoryList { "[" theoryTerms? "]" }
+
+TheorySet { "{" theoryTerms? "}" }
+
+// Theory definitions
+
+Theory {
+  "#theory" Identifier "{" (theoryDefinition (";" theoryDefinition)*)? "}" "."
+}
+
+theoryDefinition { TheoryTermDefinition | TheoryAtomDefinition }
+
+TheoryTermDefinition {
+  Identifier "{" (TheoryOperatorDefinition (";" TheoryOperatorDefinition)*)? "}"
+}
+
+TheoryOperatorDefinition {
+  theoryOperator ":" Number "," (ext<"unary"> | ext<"binary"> "," (ext<"left"> | ext<"right">))
+}
+
+TheoryAtomDefinition {
+  "&" Identifier "/" Number ":" Identifier ","
+  ("{" (theoryOperator ("," theoryOperator)*)? "}" "," Identifier ",")?
+  (ext<"head"> | ext<"body"> | ext<"any"> | ext<"directive">)
+}
+
+// Tokens
+
+kw<term> { @specialize[@name={term}]<Identifier, term> }
+
+ext<term> { @extend[@name={term}]<Identifier, term> }
+
+@skip { space | LineComment | BlockComment }
+
+@skip {} {
+  String { '"' (stringContent | Escape)* stringEnd }
+
+  FString { 'f"' (fstringContent | fstringEscape | FStringField)* fstringEnd }
+}
+
+@local tokens {
+  stringEnd[@name='"'] { '"' }
+  Escape { "\\" $[n"\\] }
+  @else stringContent
+}
+
+@local tokens {
+  fstringEnd[@name='"'] { '"' }
+  fstringEscape[@name=Escape] { "\\" $[n"\\] | "{{" | "}}" }
+  fieldStart[@name="{"] { "{" }
+  @precedence { fstringEscape, fieldStart }
+  @else fstringContent
+}
+
+@external tokens code from "./tokens" { Code }
+
+@external tokens blockComment from "./tokens" { BlockComment }
+
+@tokens {
+  space { $[ \t\r\n]+ }
+
+  LineComment { "%" (![*\n] ![\n]*)? | "#!" ![\n]* }
+
+  Identifier { $[_']* $[a-z] $[A-Za-z0-9_']* }
+
+  Variable { $[_']* $[A-Z] $[A-Za-z0-9_']* }
+
+  Anonymous { "_" }
+
+  Number { "0" | $[1-9] $[0-9]* | "0x" $[0-9A-Fa-f]+ | "0o" $[0-7]+ | "0b" $[01]+ }
+
+  Infimum { "#inf" | "#infimum" }
+
+  Supremum { "#sup" | "#supremum" }
+
+  // clingo's THEORYOP, without `.`, `:`, `;` and `:-`, which it lexes as punctuation.
+  TheoryOperator {
+    theoryChar |
+    $[/!<=>+\-*\\?&@|;~^.] (theoryChar | $[:;.])+ |
+    ":" ($[/!<=>+*\\?&@|~^:;.] | "-" (theoryChar | $[:;.])+) (theoryChar | $[:;.])*
+  }
+
+  theoryChar { $[/!<=>+\-*\\?&@|~^] }
+
+  Projection { "*" }
+
+  FStringFormat { ("." $[a-z] | "[" | "!" | ":") ![}"\n]* }
+
+  @precedence { 'f"', Identifier, Variable, Anonymous }
+
+  @precedence { TheoryOperator, ":-", ":", ";", "." }
+
+  '"' 'f"'
+
+  "#const" "#count" "#defined" "#edge" "#end" "#external" "#false" "#heuristic"
+  "#include" "#max" "#maximise" "#maximize" "#min" "#minimise" "#minimize" "#program"
+  "#project" "#script" "#show" "#sort" "#sum" "#sum+" "#theory" "#true"
+
+  "(" ")" "[" "]" "{" "}"
+  "," ";" "." ":" ":-" ":~" ".."
+  "=" "==" "!=" "<>" "<" "<=" ">" ">="
+  "+" "-" "*" "/" "\\" "**" "^" "?" "&" "~" "|" "@"
+}
+
+@detectDelim

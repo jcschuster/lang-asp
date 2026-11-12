@@ -1,0 +1,176 @@
+# Fact
+
+p.
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier),"."))
+
+# Rule with negation
+
+p(X) :- q(X), not r(X).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Variable,")"),":-",Body(SymbolicAtom(Identifier,"(",Variable,")"),",",not,SymbolicAtom(Identifier,"(",Variable,")")),"."))
+
+# Rule with empty body
+
+p :- .
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier),":-","."))
+
+# Integrity constraint
+
+:- p, q.
+
+==>
+
+SourceFile(IntegrityConstraint(":-",Body(SymbolicAtom(Identifier),",",SymbolicAtom(Identifier)),"."))
+
+# Empty integrity constraint
+
+:- .
+
+==>
+
+SourceFile(IntegrityConstraint(":-","."))
+
+# Weak constraint
+
+:~ p(X), q. [X@2, X]
+
+==>
+
+SourceFile(WeakConstraint(":~",Body(SymbolicAtom(Identifier,"(",Variable,")"),",",SymbolicAtom(Identifier)),".","[",Variable,"@",Number,",",Variable,"]"))
+
+# Minimize and maximize
+
+#minimize { X@1,Y : p(X,Y); 2 }.
+#maximise { }.
+
+==>
+
+SourceFile(Minimize("#minimize","{",OptimizeElement(Variable,"@",Number,",",Variable,":",Condition(SymbolicAtom(Identifier,"(",Variable,",",Variable,")"))),";",OptimizeElement(Number),"}","."),Maximize("#maximise","{","}","."))
+
+# Show
+
+#show.
+
+==>
+
+SourceFile(Show("#show","."))
+
+# Show signature
+
+#show p/2.
+#show -q/1.
+
+==>
+
+SourceFile(ShowSignature("#show",Signature(Identifier,"/",Number),"."),ShowSignature("#show",Signature("-",Identifier,"/",Number),"."))
+
+# Show signature with value (beyond clingo 5.8)
+
+#show p/2. [true]
+
+==>
+
+SourceFile(ShowSignature("#show",Signature(Identifier,"/",Number),".","[",true,"]"))
+
+# Show term
+
+#show p(X) : q(X).
+#show a/2+1.
+
+==>
+
+SourceFile(ShowTerm("#show",Function(Identifier,"(",Variable,")"),":",Body(SymbolicAtom(Identifier,"(",Variable,")")),"."),ShowTerm("#show",BinaryOperation(BinaryOperation(Function(Identifier),"/",Number),"+",Number),"."))
+
+# Defined
+
+#defined p/1.
+
+==>
+
+SourceFile(Defined("#defined",Signature(Identifier,"/",Number),"."))
+
+# Project
+
+#project p/1.
+#project q(X) : r(X).
+
+==>
+
+SourceFile(ProjectSignature("#project",Signature(Identifier,"/",Number),"."),ProjectAtom("#project",SymbolicAtom(Identifier,"(",Variable,")"),":",Body(SymbolicAtom(Identifier,"(",Variable,")")),"."))
+
+# Edge
+
+#edge (a,b; c,d) : e.
+
+==>
+
+SourceFile(Edge("#edge","(",Function(Identifier),",",Function(Identifier),";",Function(Identifier),",",Function(Identifier),")",":",Body(SymbolicAtom(Identifier)),"."))
+
+# Heuristic
+
+#heuristic a(X) : b(X). [1@2, sign]
+
+==>
+
+SourceFile(Heuristic("#heuristic",SymbolicAtom(Identifier,"(",Variable,")"),":",Body(SymbolicAtom(Identifier,"(",Variable,")")),".","[",Number,"@",Number,",",Function(Identifier),"]"))
+
+# External
+
+#external p(X) : q(X). [false]
+
+==>
+
+SourceFile(External("#external",SymbolicAtom(Identifier,"(",Variable,")"),":",Body(SymbolicAtom(Identifier,"(",Variable,")")),".","[",Function(Identifier),"]"))
+
+# Const
+
+#const n = 10.
+#const m = n*2. [override]
+
+==>
+
+SourceFile(Const("#const",Identifier,"=",Number,"."),Const("#const",Identifier,"=",BinaryOperation(Function(Identifier),"*",Number),".","[",override,"]"))
+
+# Include
+
+#include "file.lp".
+#include <incmode>.
+
+==>
+
+SourceFile(Include("#include",String("\"","\""),"."),Include("#include","<",Identifier,">","."))
+
+# Program
+
+#program base.
+#program step(t, u).
+
+==>
+
+SourceFile(Program("#program",Identifier,"."),Program("#program",Identifier,"(",Identifier,",",Identifier,")","."))
+
+# Script
+
+#script (other)
+import clingo
+#end.
+
+==>
+
+SourceFile(Script("#script","(",Identifier,")",Code,"#end","."))
+
+# Words that are only keywords in context
+
+p(default, override, true, left, head).
+
+==>
+
+SourceFile(Rule(HeadAtom(Identifier,"(",Function(Identifier),",",Function(Identifier),",",Function(Identifier),",",Function(Identifier),",",Function(Identifier),")"),"."))
