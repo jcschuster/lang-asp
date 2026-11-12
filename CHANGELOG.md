@@ -8,7 +8,9 @@ exposes: node names and the exported JavaScript API.
 The clingo version the grammar targets and the tree-sitter-clingo version it was started
 from are recorded in `package.json` under `clingo`.
 
-## [0.1.0] - Unreleased
+## [Unreleased]
+
+## [0.1.0] - 2026-11-12
 
 ### Added
 
